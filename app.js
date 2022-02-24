@@ -3,6 +3,7 @@
 const express = require("express");
 const ejs = require("ejs");
 const mongoose = require('mongoose');
+const { send } = require("express/lib/response");
 
 const app = express();
 
@@ -21,6 +22,7 @@ const articleSchema = new mongoose.Schema ({
 
 const Article = mongoose.model("Article", articleSchema);
 
+////////// Requests Targetting all Articles //////////
 app.route("/articles")
 
 .get(function(req, res){
@@ -59,6 +61,67 @@ app.route("/articles")
             res.send(err);
         }
     });
+});
+
+////////// Requests Targetting A Specific Article //////////
+
+app.route("/articles/:articleTitle")
+
+.get(function(req, res){
+    //GET > Fetches THE specific article 
+    Article.findOne({title: req.params.articleTitle}, function(err, foundArticle){
+        if(foundArticle){
+            res.send(foundArticle);
+        } else {
+            res.send("No articles matching that title was found.");
+        }
+    });
+})
+
+.put(function(req, res){
+    //PUT > Updates THE specific article
+    Article.replaceOne(
+        {title: req.params.articleTitle},
+        {title: req.body.title, content: req.body.content},
+        function(err){
+            if(!err){
+                res.send("Successfully update the article.");
+            } else {
+                res.send(err);
+            }
+        }
+        );
+})
+
+.patch(function(req, res){
+    //PATCH > Updates THE specific article
+    //(Only the fields that we provide data for)
+    Article.updateOne(
+        {title: req.params.articleTitle},
+        //Set all the data for the fields that should be updated.
+        {$set: req.body},
+        function(err){
+            if(!err){
+                res.send("Successfully update the article.");
+            } else {
+                res.send(err);
+            }
+        }
+    );
+})
+
+.delete(function(req, res){
+    //DELETE > Deletes THE specific article
+    Article.deleteOne(
+        {title: req.params.articleTitle},
+        function(err){
+            if(!err){
+                res.send("Successfully deleted the corresponding article.");
+            } else {
+                res.send(err);
+            }
+        }
+    );
 });
 
 app.listen(3000, function() {
